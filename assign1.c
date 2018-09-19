@@ -30,13 +30,11 @@ char historyArr[10000][10000];		// Array to store history
 int command_id = 1;					// FIXME: should it start at 1 or 0
 
 
-static void printHistory(char **, int);
+// static void printHistory(char **, int);
 static void tokenize(char *, char **);
 
 int main(void) {
 	char *args[MAX_LINE/2 + 1];		// Command line arguments
-	char *most_recent_args[MAX_LINE/2 + 1];		// For saving the last cmd executed
-
 	int should_run = 1;				// program exit flag
 
 
@@ -58,7 +56,7 @@ int main(void) {
 		/* Store command in historyArr, increment size counter */
 		if (strcmp("history", input) != 0 && strcmp("!!", input) != 0
 			&& strcmp("!", input) != 0) {
-			// printf("adding %s to historyArr\n", input);  // testing purposes
+
 			strcpy(historyArr[command_id], input);
 			command_id += 1;
 		}
@@ -96,9 +94,9 @@ int main(void) {
 			perror("fork() error.\n");
 			exit(-1);
 		}
-
+		
+		/* Child process */
 		else if (process == 0) {
-			/* Child process */
 
 			if (strcmp(args[i-1], "&") == 0)
 				wait(NULL);
@@ -113,14 +111,16 @@ int main(void) {
 				for (x = command_id-1; x >= 1; x--)
 					printf("%d %s\n", --index, historyArr[x]);
 			}
+
+			/* Execute most recent command in history */
 			else if (strcmp(args[0], "!!") == 0) {
-				/* Execute most recent command in history */
 				char *old_args[MAX_LINE/2+1];
 				tokenize(historyArr[command_id-1], old_args);
 				execvp(old_args[0], old_args);
 			}
+
+			/* Execute n'th command in history */
 			else if (strcmp(args[0], "!") == 0) {
-				/* Execute n'th command in history */
 				char *old_args[MAX_LINE/2+1];
 				int index = atoi(args[1]);
 
@@ -132,12 +132,7 @@ int main(void) {
 		}
 		else
 			wait(NULL);
-/*
-		//copy args into most recent args
-		for (j = 0; j < i; j++) {
-			strcpy(args[j], most_recent_args[j]);
-		}
-*/
+
 		/**
 		 * After reading user input, the steps are:
 		 * (1) fork a child process using fork()
