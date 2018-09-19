@@ -7,8 +7,12 @@
 
 /**
  * Notes:
+ * 		- Should I add commands that were executed by ! or !! to the history?
+ *
+ * 		- Make sure to change it so that history only prints out 10, not all of them
+ *
  * 		- Exit functionality still not working
- *			1. currently only doesn't work when run right after the history function
+ *			1. currently only doesn't work when run right after the history function (takes as many times as you issued history to exit)
  *			2. make sure it handles 'exit' and 'Exit'
  *			3. when you misspell test after typing it twice the program hangs up. If you type during the hang then attempt to exit later it takes 2 tries
  * 		- Must still add functionality for '&' w/ wait()
@@ -52,14 +56,9 @@ int main(void) {
 		fgets(input, 10000, stdin);
 		input[strlen(input)-1] = '\0';
 
-		
-		/* Store command in historyArr, increment size counter */
-		if (strcmp("history", input) != 0 && strcmp("!!", input) != 0
-			&& strcmp("!", input) != 0) {
-
-			strcpy(historyArr[command_id], input);
-			command_id += 1;
-		}
+		/* Keep a copy of the input string that's not tokenized for history conditional */
+		char tmp[10000];
+		strcpy(tmp, input);
 
 
 		/* Split string by spaces, send tokens to args[] var */
@@ -77,6 +76,13 @@ int main(void) {
 		for (int j = i; j < MAX_LINE/2 + 1; j++)
 			args[j] = NULL;
 
+
+		/* Store command in historyArr, increment size counter */
+		if (strcmp("history", args[0]) != 0 && strcmp("!!", args[0]) != 0
+			&& strcmp("!", args[0]) != 0) {
+				strcpy(historyArr[command_id], tmp);
+				command_id += 1;
+		}
 
 		/* Create child process */
 		process = fork();
