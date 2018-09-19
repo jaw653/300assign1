@@ -8,8 +8,9 @@
 /**
  * Notes:
  * 		- Exit functionality still not working
- *			1. takes as many exits as forks to quit
+ *			1. currently only doesn't work when run right after the history function
  *			2. make sure it handles 'exit' and 'Exit'
+ *			3. when you misspell test after typing it twice the program hangs up. If you type during the hang then attempt to exit later it takes 2 tries
  * 		- Must still add functionality for '&' w/ wait()
  *
  * 		- Must add history functionality that supports
@@ -42,43 +43,48 @@ int main(void) {
 	pid_t process;
 
 	while (should_run) {
-		printf("osh>");				// Print command line
-		fflush(stdout);				// Flush input for same-line entry
+		/* Print command line, flush input for same-line entry */
+		printf("osh>");
+		fflush(stdout);
 
-		fgets(input, 10000, stdin);				// Scan entire line to input var
-		input[strlen(input)-1] = '\0';			// Get rid of trailing '\n'
 
-		// historyArr[command_id] = input;			// Store command in history
+		/* Scan entire line to input var, get rid of trailing '\n' */
+		fgets(input, 10000, stdin);
+		input[strlen(input)-1] = '\0';
+
+		
+		/* Store command in historyArr, increment size counter */
 		if (strcmp("history", input) != 0) {
+			// printf("adding %s to historyArr\n", input);  // testing purposes
 			strcpy(historyArr[command_id], input);
 			command_id += 1;
 		}
 
-		// printf("adding %s to historyArr\n", input);  // testing purposes
 
-
-		char *str = strtok(input, " ");			// Split String by spaces
+		/* Split string by spaces, send tokens to args[] var */
+		char *str = strtok(input, " ");
 		int i;
 		for (i = 0; str; i++) {
 			//printf("%s\n", str);
 			str[strlen(str)] = '\0';
-			args[i] = str;						// Send tokens to args[]
+			args[i] = str;
 			str = strtok(NULL, " ");
 		}
 
-		for (int j = i; j < MAX_LINE/2 + 1; j++) {	// Fill all remaining with NULL
+
+		/* Fill all remaining entries in args[] arr w/ NULL */
+		for (int j = i; j < MAX_LINE/2 + 1; j++)
 			args[j] = NULL;
-		}
 
-		// printf("args[i-1] is: %s\n", args[i-1]);  //purely for testing
 
-		process = fork();						// Create child process
+		/* Create child process */
+		process = fork();
 
 		if (strcmp(args[i-1], "&") == 0) {			// FIXME: need to do add this functionality
 			wait(NULL);
 		}
 
-
+		/* Catch exit before executing anything */
 		if (strcmp(args[0], "exit") == 0) {
 			should_run = 0;
 			exit(0);
@@ -87,81 +93,29 @@ int main(void) {
 			perror("fork() error.\n");
 			exit(-1);
 		}
-		else if (process == 0) {				// Child process
+
+		/* Child process */
+		else if (process == 0) {
 			if (strcmp(args[i-1], "&") == 0)
 				wait(NULL);
 
 			if (strcmp(args[0], "exit") == 0) {
 				should_run = 0;
 				exit(0);
-				//return 0;
 			}
 			else if (strcmp(args[0], "history") == 0) {
-				//printHistory(historyArr, command_id);
 				int index = command_id;
 				int x;
-				for (x = command_id-1; x >= 1; x--) {
+				for (x = command_id-1; x >= 1; x--)
 					printf("%d %s\n", --index, historyArr[x]);
-				}
 			}
 
 			execvp(args[0], args);
 		}
-		else {
+		else
 			wait(NULL);
-		}
 
 
-/*
-
-/*
-		int j;									// testing for tokens
-		for (j = 0; j < i; j++) {
-			printf("%s\n", args[j]);
-		}
-
-		if (strcmp(args[0], "exit") == 0)
-			exit(0);
-		if (strcmp(args[i], "&") == 0)
-			//invoke wait(&status)
-
-		return 0;
-		//pid_t process = fork();
-		int process;
-		if (process < 0) {
-			fprintf(stderr, "Error: fork() issue.\n");
-			exit(-1);
-		}
-		else if (process == 0) {				// Child process
-			//invoke execvp()
-
-		}
-*/
-/*
-		if (strcmp(input, "exit") == 0) {
-			printf("flag\n");
-			should_run = 0;
-			return 0;
-		}
-		
-		pid_t process = fork();					// Create child process
-
-		if (process < 0) {						// fork() error handling
-			fprintf(stderr, "fork() error\n");
-			exit(-1);
-		}
-
-		if (process == 0) {						// Child process
-			printf("child process\n");
-
-			if (strcmp(input, "exit") == 0) {
-				should_run = 0;
-				return 0;
-			}
-		}
-		else									// Parent process
-			wait(&status);
-*/
 
 		/**
 		 * After reading user input, the steps are:
@@ -169,8 +123,6 @@ int main(void) {
 		 * (2) the child process will invoke execvp()
 		 * (3) if command included &, parent will invoke wait()
 		 */
-
-		//execvp(args[0], args);
 	}
 
 	return 0;
