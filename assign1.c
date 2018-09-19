@@ -32,8 +32,8 @@ int command_id = 1;					// FIXME: should it start at 1 or 0
 
 
 // static void printHistory(char **, int);
-static void tokenize(char *, char **);
-static void execute(char **);
+static int tokenize(char *, char **);
+static void execute(char **, int);
 
 int main(void) {
 	char *args[MAX_LINE/2 + 1];		// Command line arguments
@@ -59,7 +59,7 @@ int main(void) {
 		strcpy(tmp, input);
 
 
-		tokenize(input, args);
+		int args_size = tokenize(input, args);
 
 
 		if (strcmp(args[0], "exit") == 0)
@@ -69,13 +69,16 @@ int main(void) {
 			&& args[0][0] != '!') {
 
 				strcpy(historyArr[command_id], tmp);
-				printf("copying in: %s\n", tmp);
+				//printf("copying in: %s\n", tmp);
 				command_id += 1;
-				execute(args);
+				execute(args, args_size);
 		}
 
 		else {
-			if (strcmp("history", args[0]) == 0) {
+			if (strcmp("&", args[args_size-1]) == 0) {
+
+			}
+			else if (strcmp("history", args[0]) == 0) {
 				int index = command_id-1;
 				//int x;
 				int counter = 1;
@@ -98,9 +101,9 @@ int main(void) {
 					strcpy(full_cmd, historyArr[command_id-1]);
 					strcpy(full_cmd2, historyArr[command_id-1]);
 
-					tokenize(full_cmd, old_args);
+					int old_args_size = tokenize(full_cmd, old_args);
 					
-					execute(old_args);
+					execute(old_args, old_args_size);
 
 					strcpy(historyArr[command_id], full_cmd2);
 					command_id += 1;
@@ -120,9 +123,9 @@ int main(void) {
 					strcpy(full_cmd, historyArr[index]);
 					strcpy(full_cmd2, historyArr[index]);
 
-					tokenize(full_cmd, old_args);
+					int old_args_size = tokenize(full_cmd, old_args);
 					
-					execute(old_args);
+					execute(old_args, old_args_size);
 
 					strcpy(historyArr[command_id], full_cmd2);
 					command_id += 1;
@@ -156,8 +159,9 @@ static void printHistory(char **commandHistory, int size) {
  * Breaks @input into space character-separated strings
  * @input - full command entered at prompt
  * @arr - array of separeted strings
+ * return size of arr (number of tokens)
  */
-static void tokenize(char *input, char *arr[]) {
+static int tokenize(char *input, char *arr[]) {
 	char *str = strtok(input, " ");
 	int i;
 	for (i = 0; str; i++) {
@@ -173,16 +177,24 @@ static void tokenize(char *input, char *arr[]) {
 	for (j = i; j < MAX_LINE/2 + 1; j++)
 		arr[j] = NULL;
 
-	return;
+	return i;
 }
 
 /**
  * Executes commands stored in args and creates child processe(s)
  * @args - command to be executed
  */
-static void execute(char **args) {
+static void execute(char **args, int size) {
 	pid_t pid;
 	int status;
+	int wait_flag = 1;
+
+	// if last token is '&', set flag=1, and therefore do not implement wait()
+	// printf("args[size-1] is: %s\n", args[size-1]);
+	if (strcmp(args[size-1], "&") == 0) {
+		wait_flag = 0;
+		args[size-1] = NULL;
+	}
 
 	if ((pid = fork()) < 0) {
 		perror("Error: fork() failed()\n");
@@ -195,6 +207,9 @@ static void execute(char **args) {
 			exit(1);
 		}
 	}
-	else
-		while (wait(&status) != pid);
+	else {
+		if (wait_flag) {
+			while (wait(&status) != pid);
+		}
+	}
 }
