@@ -35,6 +35,7 @@ int command_id = 1;					// FIXME: should it start at 1 or 0
 
 // static void printHistory(char **, int);
 static void tokenize(char *, char **);
+static void execute(char **);
 
 int main(void) {
 	char *args[MAX_LINE/2 + 1];		// Command line arguments
@@ -58,8 +59,48 @@ int main(void) {
 		char tmp[10000];
 		strcpy(tmp, input);
 
+		tokenize(input, args);
 
-		/* Split string by spaces, send tokens to args[] var */
+		if (strcmp(args[0], "exit") == 0)
+			exit(0);
+
+		else if (strcmp("history", args[0]) != 0 && strcmp("!!", args[0]) != 0
+			&& strcmp("!", args[0]) != 0) {
+				printf("command %d\n", command_id);
+				strcpy(historyArr[command_id], tmp);
+				command_id += 1;
+				execute(args);
+		}
+
+		else {
+			if (strcmp("history", args[0]) == 0) {
+				int index = command_id-1;
+				//int x;
+				int counter = 1;
+				while (counter <= 10 && index > 0) {
+					printf("%d %s\n", index, historyArr[index]);
+					index -= 1;
+					counter += 1;
+				}
+			}
+			else if (strcmp("!!", args[0]) == 0) {
+				char *old_args[MAX_LINE/2+1];
+				tokenize(historyArr[command_id-1], old_args);
+				execute(old_args);
+			}
+			else if (strcmp("!", args[0]) == 0) {
+				char *old_args[MAX_LINE/2+1];
+				int index = atoi(args[1]);
+
+				tokenize(historyArr[index], old_args);
+				execute(old_args);
+			}
+		}
+
+		
+
+/*
+		/* Split string by spaces, send tokens to args[] var *
 		char *str = strtok(input, " ");
 		int i;
 		for (i = 0; str; i++) {
@@ -70,12 +111,12 @@ int main(void) {
 		}
 
 
-		/* Fill all remaining entries in args[] arr w/ NULL */
+		/* Fill all remaining entries in args[] arr w/ NULL *
 		for (int j = i; j < MAX_LINE/2 + 1; j++)
 			args[j] = NULL;
 
 
-		/* Store command in historyArr, increment size counter */
+		/* Store command in historyArr, increment size counter *
 		if (strcmp("history", args[0]) != 0 && strcmp("!!", args[0]) != 0
 			&& strcmp("!", args[0]) != 0) {
 				strcpy(historyArr[command_id], tmp);
@@ -88,13 +129,13 @@ int main(void) {
 			wait(NULL);
 		}
 
-		/* Catch exit before executing anything */
+		/* Catch exit before executing anything *
 		if (strcmp(args[0], "exit") == 0) {
 			should_run = 0;
 			exit(0);
 		}
 
-		/* Create child process */
+		/* Create child process *
 		process = fork();
 
 		if (process < 0) {
@@ -102,12 +143,12 @@ int main(void) {
 			exit(-1);
 		}
 		
-		/* Child process */
+		/* Child process *
 		else if (process == 0) {
 /*
 			if (strcmp(args[i-1], "&") == 0)
 				wait(NULL);
-*/
+*
 			if (strcmp(args[0], "exit") == 0) {
 				should_run = 0;
 				exit(0);
@@ -122,24 +163,24 @@ int main(void) {
 					printf("%d %s\n", --index, historyArr[index]);
 					counter += 1;
 				}
-				//printf("end flag\n");
+				printf("end flag\n");
 /*
 				for (x = command_id-1; x >= 1; x--) {
 					if (counter == 10) break;
 					printf("%d %s\n", --index, historyArr[x]);
 					counter += 1;
 				}
-*/
+*
 			}
 
-			/* Execute most recent command in history */
+			/* Execute most recent command in history *
 			else if (strcmp(args[0], "!!") == 0) {
 				char *old_args[MAX_LINE/2+1];
 				tokenize(historyArr[command_id-1], old_args);
 				execvp(old_args[0], old_args);
 			}
 
-			/* Execute n'th command in history */
+			/* Execute n'th command in history *
 			else if (strcmp(args[0], "!") == 0) {
 				char *old_args[MAX_LINE/2+1];
 				int index = atoi(args[1]);
@@ -149,7 +190,8 @@ int main(void) {
 			}
 
 			printf("executing: %s\n", args[0]);
-			execvp(args[0], args);
+			if (execvp(args[0], args) < 0)
+				printf("FAIL\n");
 		}
 		else {
 			wait(NULL);
@@ -158,7 +200,7 @@ int main(void) {
 				printf("exit flag\n");
 				break;
 			}
-*/
+*
 			printf("parent\n");
 		}
 
@@ -206,4 +248,23 @@ static void tokenize(char *input, char *arr[]) {
 		arr[j] = NULL;
 
 	return;
+}
+
+static void execute(char **args) {
+	pid_t pid;
+	int status;
+
+	if ((pid = fork()) < 0) {
+		perror("Error: fork() failed()\n");
+		exit(1);
+	}
+	/* Child Process */
+	else if (pid == 0) {
+		if (execvp(*args, args) < 0) {
+			perror("Error: execution failed\n");
+			exit(1);
+		}
+	}
+	else
+		while (wait(&status) != pid);
 }
