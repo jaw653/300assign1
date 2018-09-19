@@ -49,8 +49,10 @@ int main(void) {
 		input[strlen(input)-1] = '\0';			// Get rid of trailing '\n'
 
 		// historyArr[command_id] = input;			// Store command in history
-		strcpy(historyArr[command_id], input);
-		printf("adding %s to historyArr\n", input);
+		if (strcmp("history", input) != 0)
+			strcpy(historyArr[command_id], input);
+
+		// printf("adding %s to historyArr\n", input);  // testing purposes
 		command_id += 1;
 
 
@@ -96,9 +98,10 @@ int main(void) {
 			else if (strcmp(args[0], "history") == 0) {
 				printf("flag\n");
 				//printHistory(historyArr, command_id);
+				int index = command_id;
 				int x;
-				for (x = 0; x < command_id; x++) {
-					printf("%s\n", historyArr[x]);
+				for (x = command_id; x >= 0; x--) {
+					printf("%d %s\n", index--, historyArr[x]);
 				}
 			}
 
