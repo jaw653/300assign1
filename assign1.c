@@ -26,7 +26,7 @@
 
 #define MAX_LINE 80		// Max length command
 char historyArr[10000][10000];		// Array to store history
-int command_id = 0;					// FIXME: should it start at 1 or 0
+int command_id = 1;					// FIXME: should it start at 1 or 0
 
 
 static void printHistory(char **, int);
@@ -49,11 +49,12 @@ int main(void) {
 		input[strlen(input)-1] = '\0';			// Get rid of trailing '\n'
 
 		// historyArr[command_id] = input;			// Store command in history
-		if (strcmp("history", input) != 0)
+		if (strcmp("history", input) != 0) {
 			strcpy(historyArr[command_id], input);
+			command_id += 1;
+		}
 
 		// printf("adding %s to historyArr\n", input);  // testing purposes
-		command_id += 1;
 
 
 		char *str = strtok(input, " ");			// Split String by spaces
@@ -96,12 +97,11 @@ int main(void) {
 				//return 0;
 			}
 			else if (strcmp(args[0], "history") == 0) {
-				printf("flag\n");
 				//printHistory(historyArr, command_id);
 				int index = command_id;
 				int x;
-				for (x = command_id; x >= 0; x--) {
-					printf("%d %s\n", index--, historyArr[x]);
+				for (x = command_id-1; x >= 1; x--) {
+					printf("%d %s\n", --index, historyArr[x]);
 				}
 			}
 
