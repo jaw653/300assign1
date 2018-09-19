@@ -86,16 +86,23 @@ int main(void) {
 				}
 			}
 			else if (strcmp("!!", args[0]) == 0) {
+				char *old_args[MAX_LINE/2+1];
+
 				if (command_id == 1) {
 					printf("No commands in history.\n");
 				}
 				else {
-					char *old_args[MAX_LINE/2+1];
-					tokenize(historyArr[command_id-1], old_args);
+					char full_cmd[10000];
+					char full_cmd2[10000];
+
+					strcpy(full_cmd, historyArr[command_id-1]);
+					strcpy(full_cmd2, historyArr[command_id-1]);
+
+					tokenize(full_cmd, old_args);
 					
 					execute(old_args);
 
-					strcpy(historyArr[command_id], tmp);
+					strcpy(historyArr[command_id], full_cmd2);
 					command_id += 1;
 				}
 			}
@@ -117,7 +124,6 @@ int main(void) {
 					
 					execute(old_args);
 
-					printf("historyArr[index] is: %s\n", historyArr[index]);
 					strcpy(historyArr[command_id], full_cmd2);
 					command_id += 1;
 				}
