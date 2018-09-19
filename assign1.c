@@ -9,7 +9,7 @@
  * Notes:
  * 		- Should I add commands that were executed by ! or !! to the history?
  *
- * 		- Make sure to change it so that history only prints out 10, not all of them
+ * 		- Maybe change historyArr to only hold the most recent 10 cause prof could overload if lots of test cases
  *
  * 		- Exit functionality still not working
  *			1. currently only doesn't work when run right after the history function (takes as many times as you issued history to exit)
@@ -114,8 +114,12 @@ int main(void) {
 			else if (strcmp(args[0], "history") == 0) {
 				int index = command_id;
 				int x;
-				for (x = command_id-1; x >= 1; x--)
+				int counter = 0;
+				for (x = command_id-1; x >= 1; x--) {
+					if (counter == 10) break;
 					printf("%d %s\n", --index, historyArr[x]);
+					counter += 1;
+				}
 			}
 
 			/* Execute most recent command in history */
@@ -162,7 +166,7 @@ static void printHistory(char **commandHistory, int size) {
 */
 
 /**
- * Break @input into space character-separated strings
+ * Breaks @input into space character-separated strings
  * @input - full command entered at prompt
  * @arr - array of separeted strings
  */
